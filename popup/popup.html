@@ -4,68 +4,64 @@
 <head>
     <style>
         :root {
-            --bg: #1a1a1e;
-            --a: #ff2a5f;
-            --t: #ffffff;
-            --tm: #888890;
-            --p: rgba(255, 255, 255, 0.05);
+            --bg: #111111;
+            --fg: #ffffff;
+            --dim: #888888;
+            --border: #333333;
         }
 
         body {
-            width: 220px;
-            font-family: 'Inter', system-ui, sans-serif;
+            width: 200px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             margin: 0;
-            padding: 16px;
+            padding: 24px;
             background: var(--bg);
-            color: var(--t);
+            color: var(--fg);
             user-select: none;
             overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
         }
 
         h3 {
-            margin: 0 0 16px 0;
+            margin: 0;
             font-size: 13px;
-            font-weight: 600;
+            font-weight: 500;
+            color: var(--dim);
             text-align: center;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--tm);
         }
 
         .c {
-            background: var(--p);
-            border-radius: 16px;
-            padding: 20px 16px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.05);
             display: flex;
             flex-direction: column;
             align-items: center;
+            gap: 20px;
         }
 
         .v {
-            font-size: 36px;
-            font-weight: 800;
-            margin-bottom: 20px;
-            text-shadow: 0 4px 16px rgba(255, 42, 95, 0.3);
-            color: var(--t);
-            transition: all 0.1s ease;
+            font-size: 48px;
+            font-weight: 300;
+            letter-spacing: -2px;
+            font-variant-numeric: tabular-nums;
+            line-height: 1;
         }
 
         .v span {
-            font-size: 14px;
-            color: var(--a);
-            vertical-align: super;
+            font-size: 16px;
+            color: var(--dim);
+            font-weight: 400;
+            margin-left: 2px;
+            letter-spacing: normal;
         }
 
         input[type=range] {
             -webkit-appearance: none;
             width: 100%;
-            background: rgba(255, 255, 255, 0.1);
-            height: 6px;
-            border-radius: 3px;
+            background: var(--border);
+            height: 2px;
+            border-radius: 1px;
             outline: none;
-            margin-bottom: 24px;
         }
 
         input[type=range]::-webkit-slider-thumb {
@@ -73,56 +69,49 @@
             width: 16px;
             height: 16px;
             border-radius: 50%;
-            background: var(--a);
+            background: var(--fg);
             cursor: pointer;
-            box-shadow: 0 0 10px var(--a);
-            transition: transform 0.1s;
+            transition: transform 0.1s ease;
         }
 
-        input[type=range]::-webkit-slider-thumb:hover {
-            transform: scale(1.2);
+        input[type=range]::-webkit-slider-thumb:active {
+            transform: scale(0.85);
         }
 
         input[type=range]::-moz-range-thumb {
             width: 16px;
             height: 16px;
             border-radius: 50%;
-            background: var(--a);
+            background: var(--fg);
             cursor: pointer;
             border: none;
-            box-shadow: 0 0 10px var(--a);
-            transition: transform 0.1s;
+            transition: transform 0.1s ease;
         }
 
-        input[type=range]::-moz-range-thumb:hover {
-            transform: scale(1.2);
-        }
-
-        input[type=range]::-moz-range-track {
-            background: transparent;
+        input[type=range]::-moz-range-thumb:active {
+            transform: scale(0.85);
         }
 
         button {
             width: 100%;
-            padding: 8px;
-            background: rgba(255, 42, 95, 0.15);
-            color: var(--a);
-            border: 1px solid rgba(255, 42, 95, 0.3);
+            padding: 10px;
+            background: transparent;
+            color: var(--fg);
+            border: 1px solid var(--border);
             border-radius: 8px;
             cursor: pointer;
-            font-weight: 600;
             font-size: 13px;
+            font-weight: 500;
             transition: all 0.2s ease;
         }
 
         button:hover {
-            background: var(--a);
-            color: #fff;
-            box-shadow: 0 4px 12px rgba(255, 42, 95, 0.3);
+            border-color: var(--fg);
+            background: rgba(255, 255, 255, 0.05);
         }
 
         button:active {
-            transform: scale(0.96);
+            transform: scale(0.97);
         }
     </style>
 </head>
