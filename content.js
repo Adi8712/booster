@@ -1,8 +1,7 @@
 const U = browser.runtime.getURL("worklet/processor.js");
 
-(async () => {
-    let b = 1.0;
-    try { const r = await browser.storage.local.get({ boost: 1.0 }); b = r.boost || 1.0; } catch (e) { }
+browser.runtime.sendMessage({ type: 'GET' }).then(r => {
+    let b = r.b;
     const nds = new Set();
     let actx = null;
 
@@ -56,23 +55,21 @@ const U = browser.runtime.getURL("worklet/processor.js");
     };
     init();
 
-    browser.storage.onChanged.addListener((c, a) => {
-        if (a === 'local' && c.boost) {
-            b = c.boost.newValue;
+    browser.runtime.onMessage.addListener(m => {
+        if (m.type === 'UPD') {
+            b = m.b;
             for (let n of nds) {
                 let p = n.parameters && n.parameters.get('boost');
                 if (p) p.setTargetAtTime(b, n.context.currentTime, 0.01);
             }
-            window.postMessage({ type: 'update', boost: b }, '*');
+            window.postMessage({ type: 'UPD', b: b }, '*');
         }
     });
-})();
 
-browser.storage.local.get({ boost: 1.0 }).then(r => {
     const s = document.createElement('script');
     s.textContent = `
         (function () {
-            let b = ${r.boost};
+            let b = ${b};
             const nds = new Set();
             async function setCtx(c) {
                 if (c._bi) return;
@@ -107,8 +104,8 @@ browser.storage.local.get({ boost: 1.0 }).then(r => {
                 return oConn.apply(this, a);
             };
             window.addEventListener('message', e => {
-                if (e.source !== window || !e.data || e.data.type !== 'update') return;
-                b = e.data.boost;
+                if (e.source !== window || !e.data || e.data.type !== 'UPD') return;
+                b = e.data.b;
                 for (let n of nds) {
                     let p = n.parameters && n.parameters.get('boost');
                     if (p) p.setTargetAtTime(b, n.context.currentTime, 0.01);
