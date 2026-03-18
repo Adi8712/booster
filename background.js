@@ -1,5 +1,11 @@
-browser.runtime.onMessage.addListener((m, s) => {
-    if (m.type === 'GET') return browser.storage.local.get(`t${m.tid || s.tab.id}`).then(r => ({ b: r[`t${m.tid || s.tab.id}`] || 1.0 }));
+globalThis.browser = globalThis.browser || globalThis.chrome;
+browser.runtime.onMessage.addListener((m, s, sendResponse) => {
+    if (m.type === 'GET') {
+        browser.storage.local.get(`t${m.tid || s.tab.id}`).then(r => {
+            sendResponse({ b: r[`t${m.tid || s.tab.id}`] || 1.0 });
+        });
+        return true;
+    }
     if (m.type === 'SET') {
         browser.storage.local.set({ [`t${m.tid}`]: m.b });
         browser.tabs.sendMessage(m.tid, { type: 'UPD', b: m.b }).catch(() => { });
