@@ -30,15 +30,20 @@ browser.runtime.sendMessage({ type: 'GET' }).then(r => {
     const hk = el => {
         if (el._bHk) return;
         el._bHk = true;
-        const tryHk = () => {
-            if (el._bHkd) return;
-            try {
-                const c = getCtx();
+        
+        try {
+            const c = getCtx();
+            if (!el._bHkd) {
                 c.createMediaElementSource(el).connect(c._bi);
                 el._bHkd = true;
-            } catch (e) { }
-        };
-        el.addEventListener('play', tryHk, { once: true });
+            }
+        } catch (e) { }
+
+        el.addEventListener('play', () => {
+            if (actx && actx.state === 'suspended') {
+                actx.resume().catch(() => {});
+            }
+        });
     };
 
     const obs = new MutationObserver(m => {
