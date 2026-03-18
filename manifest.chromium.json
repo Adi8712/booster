@@ -30,8 +30,7 @@
   },
   "browser_specific_settings": {
     "gecko": {
-      "id": "booster@local",
-      "strict_min_version": "115.0"
+      "id": "@booster.local"
     }
   }
 }
