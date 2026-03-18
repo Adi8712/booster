@@ -2,41 +2,25 @@
   "manifest_version": 3,
   "name": "Booster",
   "version": "1.0",
-  "description": "Zero latency, zero distortion volume booster up to 1000%.",
-  "permissions": [
-    "storage",
-    "activeTab"
-  ],
-  "host_permissions": [
-    "<all_urls>"
-  ],
+  "description": "Near zero latency & distortion, boosting audio up to 1000%",
+  "permissions": ["storage", "activeTab"],
+  "host_permissions": ["<all_urls>"],
   "background": {
-    "service_worker": "background.js"
-    // "scripts": [
-    //   "background.js"
-    // ]
+    "service_worker": "background.js",
+    "scripts": ["background.js"]
   },
   "content_scripts": [
     {
-      "matches": [
-        "<all_urls>"
-      ],
-      "js": [
-        "content.js"
-      ],
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
       "run_at": "document_start",
       "all_frames": true
     }
   ],
   "web_accessible_resources": [
     {
-      "resources": [
-        "worklet/processor.js",
-        "script.js"
-      ],
-      "matches": [
-        "<all_urls>"
-      ]
+      "resources": ["worklet/processor.js", "script.js"],
+      "matches": ["<all_urls>"]
     }
   ],
   "action": {
