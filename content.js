@@ -1,93 +1,105 @@
 if (!window.__booster) {
   window.__booster = true;
   globalThis.browser = globalThis.browser || globalThis.chrome;
-  const U = browser.runtime.getURL("worklet/processor.js");
+  const workletUrl = browser.runtime.getURL("worklet/processor.js");
 
-  browser.runtime.sendMessage({ type: "GET" }).then((r) => {
-    let b = r.b;
-    const nds = new Set();
-    let actx = null;
+  browser.runtime.sendMessage({ type: "GET" }).then((res) => {
+    let boost = res.b;
+    const nodes = new Set();
+    let audioCtx = null;
 
     function getCtx() {
-      if (!actx) {
-        actx = new window.AudioContext();
-        setCtx(actx);
+      if (!audioCtx) {
+        audioCtx = new window.AudioContext();
+        setupCtx(audioCtx);
       }
-      return actx;
+      if (audioCtx.state === "suspended") audioCtx.resume().catch(() => {});
+      return audioCtx;
     }
 
-    async function setCtx(c) {
-      if (c._bi) return;
-      c._bi = c.createGain();
-      c._bo = c.createGain();
-      c._bi.connect(c._bo);
-      c._bo.connect(c.destination);
+    async function setupCtx(ctx) {
+      if (ctx._bi) return;
+      ctx._bi = ctx.createGain();
+      ctx._bo = ctx.createGain();
+      ctx._bi.connect(ctx._bo);
+      ctx._bo.connect(ctx.destination);
       try {
-        await c.audioWorklet.addModule(U);
-        const p = new window.AudioWorkletNode(c, "processor");
-        p.parameters.get("boost").value = b;
-        c._bi.disconnect();
-        c._bi.connect(p);
-        p.connect(c._bo);
-        nds.add(p);
-      } catch (e) {}
+        await ctx.audioWorklet.addModule(workletUrl);
+        const proc = new window.AudioWorkletNode(ctx, "processor");
+        proc.parameters.get("boost").value = boost;
+        ctx._bi.connect(proc);
+        proc.connect(ctx._bo);
+        ctx._bi.disconnect(ctx._bo);
+        nodes.add(proc);
+      } catch (_) {}
+      if (ctx.state === "suspended") ctx.resume().catch(() => {});
     }
 
-    const hk = (el) => {
+    function canCapture(el) {
+      if (el.crossOrigin) return true;
+      const src = el.currentSrc || el.src;
+      if (!src) return true;
+      try {
+        return new URL(src, location.href).origin === location.origin;
+      } catch (_) {
+        return false;
+      }
+    }
+
+    function hookElement(el) {
       if (el._bHk) return;
       el._bHk = true;
 
-      try {
-        const c = getCtx();
-        if (!el._bHkd) {
-          c.createMediaElementSource(el).connect(c._bi);
-          el._bHkd = true;
-        }
-      } catch (e) {}
+      if (canCapture(el)) {
+        try {
+          const ctx = getCtx();
+          if (!el._bSrc) {
+            ctx.createMediaElementSource(el).connect(ctx._bi);
+            el._bSrc = true;
+          }
+        } catch (_) {}
+      }
 
       el.addEventListener("play", () => {
-        if (actx && actx.state === "suspended") {
-          actx.resume().catch(() => {});
-        }
+        if (audioCtx && audioCtx.state === "suspended")
+          audioCtx.resume().catch(() => {});
       });
-    };
+    }
 
-    const obs = new MutationObserver((m) => {
-      for (let x of m)
-        for (let n of x.addedNodes) {
-          if (n instanceof HTMLMediaElement) hk(n);
-          else if (n.querySelectorAll)
-            n.querySelectorAll("audio,video").forEach(hk);
+    const observer = new MutationObserver((mutations) => {
+      for (const mut of mutations)
+        for (const node of mut.addedNodes) {
+          if (node.nodeType !== 1) continue;
+          if (node instanceof HTMLMediaElement) hookElement(node);
+          else node.querySelectorAll("audio,video").forEach(hookElement);
         }
     });
 
-    const init = () => {
-      document.querySelectorAll("audio,video").forEach(hk);
-      if (document.body)
-        obs.observe(document.body, { childList: true, subtree: true });
-      else
-        document.addEventListener("DOMContentLoaded", () =>
-          obs.observe(document.body, { childList: true, subtree: true }),
-        );
-    };
-    init();
+    document.querySelectorAll("audio,video").forEach(hookElement);
+    if (document.body)
+      observer.observe(document.body, { childList: true, subtree: true });
+    else
+      document.addEventListener("DOMContentLoaded", () =>
+        observer.observe(document.body, { childList: true, subtree: true }),
+      );
 
-    browser.runtime.onMessage.addListener((m) => {
-      if (m.type === "UPD") {
-        b = m.b;
-        for (let n of nds) {
-          let p = n.parameters && n.parameters.get("boost");
-          if (p) p.setTargetAtTime(b, n.context.currentTime, 0.01);
+    browser.runtime.onMessage.addListener((msg) => {
+      if (msg.type === "UPD") {
+        boost = msg.b;
+        for (const proc of nodes) {
+          const param = proc.parameters && proc.parameters.get("boost");
+          if (param)
+            param.setTargetAtTime(boost, proc.context.currentTime, 0.01);
         }
-        window.postMessage({ type: "UPD", b: b }, "*");
+        window.postMessage({ type: "UPD", b: boost }, "*");
       }
     });
 
-    const s = document.createElement("script");
-    s.src = browser.runtime.getURL("script.js");
-    s.dataset.b = b;
-    s.dataset.u = U;
-    s.onload = () => s.remove();
-    (document.head || document.documentElement).appendChild(s);
+    const script = document.createElement("script");
+    script.src = browser.runtime.getURL("script.js");
+    script.dataset.b = boost;
+    script.dataset.u = workletUrl;
+    script.onload = () => script.remove();
+    (document.head || document.documentElement).appendChild(script);
   });
 }

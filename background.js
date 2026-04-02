@@ -1,14 +1,17 @@
 globalThis.browser = globalThis.browser || globalThis.chrome;
-browser.runtime.onMessage.addListener((m, s, sendResponse) => {
-  if (m.type === "GET") {
-    browser.storage.local.get(`t${m.tid || s.tab.id}`).then((r) => {
-      sendResponse({ b: r[`t${m.tid || s.tab.id}`] || 1.0 });
+browser.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  if (msg.type === "GET") {
+    const tabId = msg.tid || sender.tab.id;
+    browser.storage.local.get(`t${tabId}`).then((r) => {
+      sendResponse({ b: r[`t${tabId}`] || 1.0 });
     });
     return true;
   }
-  if (m.type === "SET") {
-    browser.storage.local.set({ [`t${m.tid}`]: m.b });
-    browser.tabs.sendMessage(m.tid, { type: "UPD", b: m.b }).catch(() => {});
+  if (msg.type === "SET") {
+    browser.storage.local.set({ [`t${msg.tid}`]: msg.b });
+    browser.tabs
+      .sendMessage(msg.tid, { type: "UPD", b: msg.b })
+      .catch(() => {});
   }
 });
 browser.tabs.onRemoved.addListener((tid) =>
